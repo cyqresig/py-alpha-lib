@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 use num_traits::Float;
-use rayon::prelude::*;
 
 use crate::algo::{Context, Error, is_normal, skip_nan_window::SkipNanWindow};
 
@@ -27,9 +26,7 @@ pub fn ta_skewness<NumT: Float + Send + Sync>(
   let two = NumT::from(2.0).unwrap();
   let three = NumT::from(3.0).unwrap();
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -144,7 +141,7 @@ pub fn ta_skewness<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -172,9 +169,7 @@ pub fn ta_kurtosis<NumT: Float + Send + Sync>(
   let four = NumT::from(4.0).unwrap();
   let six = NumT::from(6.0).unwrap();
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -310,7 +305,7 @@ pub fn ta_kurtosis<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }

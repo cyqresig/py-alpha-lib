@@ -4,7 +4,6 @@
 use std::{cmp::Ordering, fmt::Debug};
 
 use num_traits::Float;
-use rayon::prelude::*;
 
 use crate::algo::{Context, Error, is_normal};
 
@@ -94,7 +93,7 @@ pub fn ta_group_rank<NumT: Float + Send + Sync + Debug>(
   let input = ctx.align_end(input);
 
   let r_ptr = UnsafePtr::new(r.as_mut_ptr(), r.len());
-  (0..group_size).into_par_iter().for_each(|j| {
+  par_range_for_each!(0..group_size, |j| {
     let r = r_ptr.get();
 
     // Initialize all to NaN
@@ -194,7 +193,7 @@ pub fn ta_group_zscore<NumT: Float + Send + Sync + Debug>(
   let input = ctx.align_end(input);
 
   let r_ptr = UnsafePtr::new(r.as_mut_ptr(), r.len());
-  (0..group_size).into_par_iter().for_each(|j| {
+  par_range_for_each!(0..group_size, |j| {
     let r = r_ptr.get();
 
     for i in 0..groups {

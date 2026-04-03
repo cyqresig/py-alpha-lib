@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 use num_traits::Float;
-use rayon::prelude::*;
 
 use crate::algo::{Context, Error, is_normal};
 
@@ -42,11 +41,7 @@ pub fn ta_fret<NumT: Float + Send + Sync>(
   let close = ctx.align_end(close);
   let is_calc = ctx.align_end(is_calc);
 
-  r.par_chunks_mut(group_size)
-    .zip(open.par_chunks(group_size))
-    .zip(close.par_chunks(group_size))
-    .zip(is_calc.par_chunks(group_size))
-    .for_each(|(((r, o), c), m)| {
+  par_for_each_4!(r, open, close, is_calc, group_size, |((r, o), c), m| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 

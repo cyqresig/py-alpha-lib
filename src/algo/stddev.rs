@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 use num_traits::Float;
-use rayon::prelude::*;
 
 use crate::algo::{Context, Error, is_normal, skip_nan_window::SkipNanWindow};
 
@@ -40,9 +39,7 @@ pub fn ta_stddev<NumT: Float + Send + Sync>(
   // Pandas `rolling().std()` uses ddof=1 (Sample).
   // So we should use N-1.
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -176,7 +173,7 @@ pub fn ta_stddev<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }

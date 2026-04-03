@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 use num_traits::Float;
-use rayon::prelude::*;
 
 use crate::algo::{Context, Error, is_normal};
 
@@ -28,9 +27,7 @@ pub fn ta_entropy<NumT: Float + Send + Sync>(
 
   let bins = if bins == 0 { 10 } else { bins };
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -116,7 +113,7 @@ pub fn ta_entropy<NumT: Float + Send + Sync>(
 
         r[i] = entropy;
       }
-    });
+  });
 
   Ok(())
 }

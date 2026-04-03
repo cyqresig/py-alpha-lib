@@ -4,7 +4,7 @@ use std::io::Write;
 use std::{env, fs, path::Path};
 
 /// Type of ta function parameter with name
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 enum TaType {
   #[default]
   None,
@@ -75,7 +75,7 @@ impl TryFrom<&str> for TaType {
 /// A ta function
 ///
 /// ta function is function that name start with `ta_`
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 struct TaFunc {
   /// function name, without `ta_` prefix
   name: String,
@@ -1827,10 +1827,24 @@ fn main() -> Result<()> {
 
   build_algo_md(&functions)?;
 
-  // skip ema, we will write it as template by hand
-  functions.retain(|f| f.name != "ema");
-  build_py_bindings(&functions)?;
-  build_algo_py(&functions)?;
+  // Python bindings are only generated when the "python" feature is enabled
+  #[cfg(feature = "python")]
+  {
+    // skip ema, we will write it as template by hand
+    let mut py_functions = functions.clone();
+    py_functions.retain(|f| f.name != "ema");
+    build_py_bindings(&py_functions)?;
+    build_algo_py(&py_functions)?;
+  }
+
+  // When python feature is not enabled, create an empty bindings file
+  // so that include!() in lib.rs doesn't fail (it's behind cfg(feature = "python") anyway)
+  #[cfg(not(feature = "python"))]
+  {
+    let out_dir = env::var("OUT_DIR")?;
+    let out_file = Path::new(&out_dir).join("algo_bindings.rs");
+    fs::write(&out_file, "// No Python bindings generated\n")?;
+  }
 
   Ok(())
 }

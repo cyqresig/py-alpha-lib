@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 use num_traits::Float;
-use rayon::prelude::*;
 
 use crate::algo::{Context, Error, is_normal};
 
@@ -22,9 +21,7 @@ pub fn ta_backfill<NumT: Float + Send + Sync>(
   let r = ctx.align_end_mut(r);
   let input = ctx.align_end(input);
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r[..start].fill(NumT::nan());
 
@@ -41,7 +38,7 @@ pub fn ta_backfill<NumT: Float + Send + Sync>(
           r[i] = NumT::nan();
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -62,9 +59,7 @@ pub fn ta_count_nans<NumT: Float + Send + Sync>(
   let r = ctx.align_end_mut(r);
   let input = ctx.align_end(input);
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -97,7 +92,7 @@ pub fn ta_count_nans<NumT: Float + Send + Sync>(
           r[i] = NumT::from(nan_count).unwrap();
         }
       }
-    });
+  });
 
   Ok(())
 }

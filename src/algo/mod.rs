@@ -1,6 +1,10 @@
 // Copyright 2026 MSD-RS Project LiJia
 // SPDX-License-Identifier: BSD-2-Clause
 
+// par_compat must come first so the macros are available to all sibling modules
+#[macro_use]
+mod par_compat;
+
 mod backfill;
 mod context;
 mod cross;
@@ -13,6 +17,7 @@ mod ma;
 mod misc;
 mod moments;
 mod neutralize;
+mod quantile;
 mod rank;
 mod returns;
 mod scan;
@@ -36,6 +41,7 @@ pub use ma::*;
 pub use misc::*;
 pub use moments::*;
 pub use neutralize::*;
+pub use quantile::*;
 pub use rank::*;
 pub use returns::*;
 pub use scan::*;

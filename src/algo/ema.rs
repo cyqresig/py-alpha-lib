@@ -4,7 +4,6 @@
 use num_traits::Float;
 
 use super::{Context, Error, is_normal, skip_nan_window::SkipNanWindow};
-use rayon::prelude::*;
 
 /// Exponential Moving Average (variant of well-known EMA) weight = 2 / (n + 1)
 ///
@@ -75,9 +74,7 @@ pub fn ta_lwma<NumT: Float + Send + Sync>(
   let n_t = NumT::from(periods).unwrap();
   let sum_weight = NumT::from(periods * (periods + 1) / 2).unwrap();
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -204,7 +201,7 @@ pub fn ta_lwma<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -231,9 +228,7 @@ pub fn ema_impl<NumT: Float + Send + Sync>(
 
   let k = NumT::one() - weight;
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, i)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, i| {
       let mut prev = i[0];
       let total = r.len();
       for (n, (r, c)) in r
@@ -254,7 +249,7 @@ pub fn ema_impl<NumT: Float + Send + Sync>(
           prev = *r;
         }
       }
-    });
+  });
   Ok(())
 }
 

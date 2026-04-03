@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 use num_traits::Float;
-use rayon::prelude::*;
 
 use crate::algo::{Context, Error, is_normal, skip_nan_window::SkipNanWindow};
 
@@ -25,9 +24,7 @@ pub fn ta_min_max_diff<NumT: Float + Send + Sync>(
 
   use std::collections::VecDeque;
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -114,7 +111,7 @@ pub fn ta_min_max_diff<NumT: Float + Send + Sync>(
           r[i] = x[max_idx] - x[min_idx];
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -141,9 +138,7 @@ pub fn ta_weighted_delay<NumT: Float + Send + Sync>(
     return Ok(());
   }
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -175,7 +170,7 @@ pub fn ta_weighted_delay<NumT: Float + Send + Sync>(
           r[i] = sum / denom;
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -199,9 +194,7 @@ pub fn ta_moment<NumT: Float + Send + Sync>(
   let r = ctx.align_end_mut(r);
   let input = ctx.align_end(input);
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -311,7 +304,7 @@ pub fn ta_moment<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 use num_traits::Float;
-use rayon::prelude::*;
 
 use crate::algo::{Context, Error, is_normal, skip_nan_window::SkipNanWindow};
 
@@ -28,9 +27,7 @@ pub fn ta_ma<NumT: Float + Send + Sync>(
     return Ok(());
   }
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
       if ctx.is_skip_nan() {
@@ -122,7 +119,7 @@ pub fn ta_ma<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -145,9 +142,7 @@ pub fn ta_product<NumT: Float + Send + Sync>(
   let r = ctx.align_end_mut(r);
   let input = ctx.align_end(input);
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -289,7 +284,7 @@ pub fn ta_product<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }

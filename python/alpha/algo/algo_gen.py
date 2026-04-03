@@ -623,6 +623,33 @@ def PRODUCT(
     _algo.product(r, input, periods)
     return r
 
+def QUANTILE(
+  input: np.ndarray | list[np.ndarray], periods: int, quantile: float
+) -> np.ndarray | list[np.ndarray]:
+  """
+  Rolling Quantile (Percentile)
+  
+  Calculates the quantile value over a rolling window of `periods` elements.
+  `quantile` should be in range [0.0, 1.0], where 0.0 is the minimum and
+  1.0 is the maximum.
+  
+  Uses linear interpolation between adjacent ranks (same as numpy/pandas default).
+  
+  This operator is used to compute Alpha158's QTLU/QTLD factors:
+  QTLU = Quantile(close, N, 0.8)
+  QTLD = Quantile(close, N, 0.2)
+  """
+  if isinstance(input, list):
+    input = [_to_f64(x) for x in input]
+    r = [np.empty_like(x) for x in input]
+    _algo.quantile(r, input, periods, quantile)
+    return r
+  else:
+    input = _to_f64(input)
+    r = np.empty_like(input)
+    _algo.quantile(r, input, periods, quantile)
+    return r
+
 def RANK(
   input: np.ndarray | list[np.ndarray], periods: int
 ) -> np.ndarray | list[np.ndarray]:

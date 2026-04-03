@@ -1,6 +1,7 @@
 // Copyright 2026 MSD-RS Project LiJia
 // SPDX-License-Identifier: BSD-2-Clause
 
+#[cfg(feature = "python")]
 use pyo3::{PyErr, exceptions::PyValueError};
 use thiserror::Error;
 
@@ -14,6 +15,7 @@ pub enum Error {
   InvalidPeriod(String),
 }
 
+#[cfg(feature = "python")]
 impl From<Error> for PyErr {
   fn from(err: Error) -> Self {
     PyValueError::new_err(err.to_string())

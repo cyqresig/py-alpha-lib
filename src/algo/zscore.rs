@@ -4,7 +4,6 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
-use rayon::prelude::*;
 
 use crate::algo::{Context, Error, is_normal, skip_nan_window::SkipNanWindow};
 
@@ -25,9 +24,7 @@ pub fn ta_zscore<NumT: Float + Send + Sync>(
   let r = ctx.align_end_mut(r);
   let input = ctx.align_end(input);
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -126,7 +123,7 @@ pub fn ta_zscore<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -182,7 +179,7 @@ pub fn ta_cc_zscore<NumT: Float + Send + Sync + Debug>(
   let input = ctx.align_end(input);
 
   let r = UnsafePtr::new(r.as_mut_ptr(), r.len());
-  (0..group_size).into_par_iter().for_each(|j| {
+  par_range_for_each!(0..group_size, |j| {
     let r = r.get();
 
     // Collect values across groups for this time position

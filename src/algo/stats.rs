@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 use num_traits::Float;
-use rayon::prelude::*;
 
 use crate::algo::{Context, Error, is_normal, skip_nan_window::SkipNanWindow};
 
@@ -22,9 +21,7 @@ pub fn ta_var<NumT: Float + Send + Sync>(
   let r = ctx.align_end_mut(r);
   let input = ctx.align_end(input);
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -145,7 +142,7 @@ pub fn ta_var<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -170,10 +167,7 @@ pub fn ta_cov<NumT: Float + Send + Sync>(
 
   let chunk_size = ctx.chunk_size(r.len());
 
-  r.par_chunks_mut(chunk_size)
-    .zip(x.par_chunks(chunk_size))
-    .zip(y.par_chunks(chunk_size))
-    .for_each(|((r, x), y)| {
+  par_for_each_3!(r, x, y, chunk_size, |(r, x), y| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -302,7 +296,7 @@ pub fn ta_cov<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -327,10 +321,7 @@ pub fn ta_corr2<NumT: Float + Send + Sync>(
 
   let chunk_size = ctx.chunk_size(r.len());
 
-  r.par_chunks_mut(chunk_size)
-    .zip(x.par_chunks(chunk_size))
-    .zip(y.par_chunks(chunk_size))
-    .for_each(|((r, x), y)| {
+  par_for_each_3!(r, x, y, chunk_size, |(r, x), y| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -506,7 +497,7 @@ pub fn ta_corr2<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -531,10 +522,7 @@ pub fn ta_regbeta<NumT: Float + Send + Sync>(
 
   let chunk_size = ctx.chunk_size(r.len());
 
-  r.par_chunks_mut(chunk_size)
-    .zip(y.par_chunks(chunk_size))
-    .zip(x.par_chunks(chunk_size))
-    .for_each(|((r, y), x)| {
+  par_for_each_3!(r, y, x, chunk_size, |(r, y), x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -672,7 +660,7 @@ pub fn ta_regbeta<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -697,10 +685,7 @@ pub fn ta_regresi<NumT: Float + Send + Sync>(
 
   let chunk_size = ctx.chunk_size(r.len());
 
-  r.par_chunks_mut(chunk_size)
-    .zip(y.par_chunks(chunk_size))
-    .zip(x.par_chunks(chunk_size))
-    .for_each(|((r, y), x)| {
+  par_for_each_3!(r, y, x, chunk_size, |(r, y), x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -846,7 +831,7 @@ pub fn ta_regresi<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }

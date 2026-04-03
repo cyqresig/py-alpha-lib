@@ -4,7 +4,6 @@
 use std::{cmp::Ordering, collections::BTreeMap, fmt::Debug};
 
 use num_traits::Float;
-use rayon::prelude::*;
 
 use crate::algo::{Context, Error};
 
@@ -71,9 +70,7 @@ pub fn ta_rank<NumT: Float + Send + Sync>(
     return Ok(());
   }
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
       // Track counts per unique value to handle duplicates correctly.
@@ -131,7 +128,7 @@ pub fn ta_rank<NumT: Float + Send + Sync>(
           r[i] = NumT::from(less_count + 1).unwrap();
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -185,7 +182,7 @@ pub fn ta_cc_rank<NumT: Float + Send + Sync + Debug>(
   let input = ctx.align_end(input);
 
   let r = UnsafePtr::new(r.as_mut_ptr(), r.len());
-  (0..group_size).into_par_iter().for_each(|j| {
+  par_range_for_each!(0..group_size, |j| {
     let mut rank_window: Vec<(OrderedFloat<NumT>, usize)> = Vec::new();
     for i in 0..groups {
       let idx = i * group_size + j;
@@ -278,7 +275,7 @@ pub fn ta_bins<NumT: Float + Send + Sync + Debug>(
   }
 
   let r_ptr = UnsafePtr::new(r.as_mut_ptr(), r.len());
-  (0..group_size).into_par_iter().for_each(|j| {
+  par_range_for_each!(0..group_size, |j| {
     let mut rank_window: Vec<(OrderedFloat<NumT>, usize)> = Vec::new();
     for i in 0..groups {
       let idx = i * group_size + j;

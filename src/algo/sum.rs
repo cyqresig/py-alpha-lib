@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 use num_traits::Float;
-use rayon::prelude::*;
 
 use crate::algo::{Context, Error, is_normal, skip_nan_window::SkipNanWindow};
 
@@ -24,9 +23,7 @@ pub fn ta_sum<NumT: Float + Send + Sync>(
   let r = ctx.align_end_mut(r);
   let input = ctx.align_end(input);
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -141,7 +138,7 @@ pub fn ta_sum<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -162,9 +159,7 @@ pub fn ta_sumbars<NumT: Float + Send + Sync>(
   let r = ctx.align_end_mut(r);
   let input = ctx.align_end(input);
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .for_each(|(r, x)| {
+  par_for_each_2!(r, input, ctx.chunk_size(r.len()), |r, x| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -204,7 +199,7 @@ pub fn ta_sumbars<NumT: Float + Send + Sync>(
 
         // If loop finishes and not found, r[i] remains NaN (default fill)
       }
-    });
+  });
 
   Ok(())
 }
@@ -227,10 +222,7 @@ pub fn ta_sumif<NumT: Float + Send + Sync>(
   let input = ctx.align_end(input);
   let condition = ctx.align_end(condition);
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(input.par_chunks(ctx.chunk_size(input.len())))
-    .zip(condition.par_chunks(ctx.chunk_size(condition.len())))
-    .for_each(|((r, x), c)| {
+  par_for_each_3!(r, input, condition, ctx.chunk_size(r.len()), |(r, x), c| {
       let start = ctx.start(r.len());
       r.fill(NumT::nan());
 
@@ -386,7 +378,7 @@ pub fn ta_sumif<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }

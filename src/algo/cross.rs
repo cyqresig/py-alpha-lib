@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 use num_traits::Float;
-use rayon::prelude::*;
 
 use crate::algo::{Context, Error, is_normal};
 
@@ -23,10 +22,7 @@ pub fn ta_cross<NumT: Float + Send + Sync>(
   let a = ctx.align_end(a);
   let b = ctx.align_end(b);
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(a.par_chunks(ctx.chunk_size(a.len())))
-    .zip(b.par_chunks(ctx.chunk_size(b.len())))
-    .for_each(|((r, a), b)| {
+  par_for_each_3!(r, a, b, ctx.chunk_size(r.len()), |(r, a), b| {
       let start = ctx.start(r.len());
       r.fill(false);
 
@@ -77,7 +73,7 @@ pub fn ta_cross<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -98,10 +94,7 @@ pub fn ta_rcross<NumT: Float + Send + Sync>(
   let a = ctx.align_end(a);
   let b = ctx.align_end(b);
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(a.par_chunks(ctx.chunk_size(a.len())))
-    .zip(b.par_chunks(ctx.chunk_size(b.len())))
-    .for_each(|((r, a), b)| {
+  par_for_each_3!(r, a, b, ctx.chunk_size(r.len()), |(r, a), b| {
       let start = ctx.start(r.len());
       r.fill(false);
 
@@ -143,7 +136,7 @@ pub fn ta_rcross<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -164,10 +157,7 @@ pub fn ta_longcross<NumT: Float + Send + Sync>(
   let a = ctx.align_end(a);
   let b = ctx.align_end(b);
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(a.par_chunks(ctx.chunk_size(a.len())))
-    .zip(b.par_chunks(ctx.chunk_size(b.len())))
-    .for_each(|((r, a), b)| {
+  par_for_each_3!(r, a, b, ctx.chunk_size(r.len()), |(r, a), b| {
       let start = ctx.start(r.len());
       r.fill(false);
 
@@ -259,7 +249,7 @@ pub fn ta_longcross<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }
@@ -280,10 +270,7 @@ pub fn ta_rlongcross<NumT: Float + Send + Sync>(
   let a = ctx.align_end(a);
   let b = ctx.align_end(b);
 
-  r.par_chunks_mut(ctx.chunk_size(r.len()))
-    .zip(a.par_chunks(ctx.chunk_size(a.len())))
-    .zip(b.par_chunks(ctx.chunk_size(b.len())))
-    .for_each(|((r, a), b)| {
+  par_for_each_3!(r, a, b, ctx.chunk_size(r.len()), |(r, a), b| {
       let start = ctx.start(r.len());
       r.fill(false);
 
@@ -348,7 +335,7 @@ pub fn ta_rlongcross<NumT: Float + Send + Sync>(
           }
         }
       }
-    });
+  });
 
   Ok(())
 }
