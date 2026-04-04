@@ -1,4 +1,5 @@
 use anyhow::{Result, anyhow, bail};
+#[cfg(feature = "python")]
 use std::fmt::Write as FmtWrite;
 use std::io::Write;
 use std::{env, fs, path::Path};
@@ -173,6 +174,7 @@ fn parse_ta_file<P: AsRef<Path>>(file_name: P) -> Result<Vec<TaFunc>> {
   Ok(functions)
 }
 
+#[cfg(feature = "python")]
 fn build_py_bindings(functions: &[TaFunc]) -> Result<()> {
   let out_dir = env::var("OUT_DIR")?;
   let mut file = fs::File::create(out_dir + "/algo_bindings.rs")?;
@@ -1434,6 +1436,7 @@ fn build_py_bindings(functions: &[TaFunc]) -> Result<()> {
 
 /// Return the Python conversion call for an array parameter.
 /// NumArray → "_to_f64(x)", BoolArray → "_to_bool(x)"
+#[cfg(feature = "python")]
 fn py_convert(ty: &TaType, expr: &str) -> String {
   match ty {
     TaType::BoolArray(_) => format!("_to_bool({})", expr),
@@ -1442,6 +1445,7 @@ fn py_convert(ty: &TaType, expr: &str) -> String {
 }
 
 /// Return the list-map version: "[_to_f64(x) for x in arr]" or "[_to_bool(x) for x in arr]"
+#[cfg(feature = "python")]
 fn py_convert_list(ty: &TaType, name: &str) -> String {
   match ty {
     TaType::BoolArray(_) => format!("[_to_bool(x) for x in {}]", name),
@@ -1449,6 +1453,7 @@ fn py_convert_list(ty: &TaType, name: &str) -> String {
   }
 }
 
+#[cfg(feature = "python")]
 fn build_algo_py(functions: &[TaFunc]) -> Result<()> {
   let out_file = "python/alpha/algo/algo_gen.py";
   let mut file = fs::File::create(out_file)?;
