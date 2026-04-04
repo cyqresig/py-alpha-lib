@@ -81,3 +81,20 @@ pub fn assert_vec_eq_nan<T: Float + Display + Debug>(a: &[T], b: &[T]) {
     );
   }
 }
+
+// === Extension modules (fork-local, additive only) ===
+mod ext_stddev;
+mod ext_zscore;
+mod ext_rank_pct;
+
+pub use ext_stddev::*;
+pub use ext_zscore::*;
+pub use ext_rank_pct::*;
+
+// P2: SMA-seeded EMA / Wilder's Smoothing
+mod ext_ema;
+pub use ext_ema::*;
+
+// P3: Mean Absolute Deviation
+mod ext_mad;
+pub use ext_mad::*;

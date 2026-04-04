@@ -273,6 +273,33 @@ def DMA(
     _algo.dma(r, input, weight)
     return r
 
+def EMA_SMA_SEEDED(
+  input: np.ndarray | list[np.ndarray], periods: int
+) -> np.ndarray | list[np.ndarray]:
+  """
+  SMA-seeded EMA (Industry-standard EMA)
+  
+  α = 2 / (periods + 1), SMA seed from first `periods` values.
+  
+  Compared to `ta_ema` (first-value seed):
+  - `ta_ema`: outputs from idx 0, seed = input[0]
+  - `ta_ema_sma_seeded`: outputs from idx N-1, seed = SMA(input[0..N])
+  
+  Matches: TA-Lib / TradingView / Bloomberg EMA implementation.
+  
+  Ref: https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average
+  """
+  if isinstance(input, list):
+    input = [_to_f64(x) for x in input]
+    r = [np.empty_like(x) for x in input]
+    _algo.ema_sma_seeded(r, input, periods)
+    return r
+  else:
+    input = _to_f64(input)
+    r = np.empty_like(input)
+    _algo.ema_sma_seeded(r, input, periods)
+    return r
+
 def ENTROPY(
   input: np.ndarray | list[np.ndarray], periods: int, bins: int
 ) -> np.ndarray | list[np.ndarray]:
@@ -542,6 +569,33 @@ def MA(
     _algo.ma(r, input, periods)
     return r
 
+def MAD(
+  input: np.ndarray | list[np.ndarray], periods: int
+) -> np.ndarray | list[np.ndarray]:
+  """
+  Rolling Mean Absolute Deviation (MAD) over a moving window
+  
+  MAD = mean(|x - mean|) calculated within a rolling window of `periods`.
+  
+  This is different from `ta_moment(k=1)` which equals zero by definition
+  (since mean of (x - mean) always = 0). MAD uses absolute values.
+  
+  Use case: CCI denominator
+  CCI = (TP - SMA(TP, N)) / (0.015 × MAD(TP, N))
+  
+  Ref: https://en.wikipedia.org/wiki/Average_absolute_deviation
+  """
+  if isinstance(input, list):
+    input = [_to_f64(x) for x in input]
+    r = [np.empty_like(x) for x in input]
+    _algo.mad(r, input, periods)
+    return r
+  else:
+    input = _to_f64(input)
+    r = np.empty_like(input)
+    _algo.mad(r, input, periods)
+    return r
+
 def MIN_MAX_DIFF(
   input: np.ndarray | list[np.ndarray], periods: int
 ) -> np.ndarray | list[np.ndarray]:
@@ -668,6 +722,38 @@ def RANK(
     input = _to_f64(input)
     r = np.empty_like(input)
     _algo.rank(r, input, periods)
+    return r
+
+def RANK_PCT(
+  input: np.ndarray | list[np.ndarray], periods: int
+) -> np.ndarray | list[np.ndarray]:
+  """
+  Rolling Rank Percentile over a moving window
+  
+  Calculates the rank percentile of the current value within a rolling window
+  of `periods` elements. The result is in range [0.0, 1.0].
+  
+  Formula: rank_pct[i] = count(window_values <= data[i]) / valid_count_in_window
+  
+  This differs from `ta_quantile(data, N, q)` which returns the value at the
+  q-th quantile of the window (a "value lookup"). `ta_rank_pct` returns the
+  rank position of the current value (a "rank lookup").
+  
+  Example:
+  input = [10, 20, 30, 15, 25], periods=3, strictly_cycle
+  idx 2: [10,20,30] → count(<=30)/3 = 3/3 = 1.000
+  idx 3: [20,30,15] → count(<=15)/3 = 1/3 = 0.333
+  idx 4: [30,15,25] → count(<=25)/3 = 2/3 = 0.667
+  """
+  if isinstance(input, list):
+    input = [_to_f64(x) for x in input]
+    r = [np.empty_like(x) for x in input]
+    _algo.rank_pct(r, input, periods)
+    return r
+  else:
+    input = _to_f64(input)
+    r = np.empty_like(input)
+    _algo.rank_pct(r, input, periods)
     return r
 
 def RCROSS(
@@ -892,6 +978,32 @@ def STDDEV(
     _algo.stddev(r, input, periods)
     return r
 
+def STDDEV_POP(
+  input: np.ndarray | list[np.ndarray], periods: int
+) -> np.ndarray | list[np.ndarray]:
+  """
+  Population Standard Deviation (ddof=0) over a moving window
+  
+  Uses divisor N (Population StdDev), which is the industry standard for
+  financial technical analysis (TA-Lib, TradingView, Bloomberg all use ddof=0).
+  
+  This differs from `ta_stddev` which uses divisor N-1 (Sample StdDev, ddof=1).
+  
+  Formula: σ = sqrt( Σ(xᵢ - x̄)² / N )
+  
+  Ref: https://en.wikipedia.org/wiki/Standard_deviation#Population_standard_deviation
+  """
+  if isinstance(input, list):
+    input = [_to_f64(x) for x in input]
+    r = [np.empty_like(x) for x in input]
+    _algo.stddev_pop(r, input, periods)
+    return r
+  else:
+    input = _to_f64(input)
+    r = np.empty_like(input)
+    _algo.stddev_pop(r, input, periods)
+    return r
+
 def SUM(
   input: np.ndarray | list[np.ndarray], periods: int
 ) -> np.ndarray | list[np.ndarray]:
@@ -992,6 +1104,33 @@ def WEIGHTED_DELAY(
     _algo.weighted_delay(r, input, periods)
     return r
 
+def WILDER_SMOOTH(
+  input: np.ndarray | list[np.ndarray], periods: int
+) -> np.ndarray | list[np.ndarray]:
+  """
+  Wilder's Smoothing (used by RSI, ATR-Wilder, ADX)
+  
+  α = 1 / periods, SMA seed from first `periods` values.
+  
+  Formula: result[i] = (1/N) * input[i] + (1 - 1/N) * result[i-1]
+  Equivalent: result[i] = (result[i-1] * (N-1) + input[i]) / N
+  
+  This is the smoothing method defined by J. Welles Wilder in 1978.
+  All major platforms (TA-Lib, TradingView, Bloomberg) use this for RSI/ATR.
+  
+  Ref: "New Concepts in Technical Trading Systems" by J. Welles Wilder Jr.
+  """
+  if isinstance(input, list):
+    input = [_to_f64(x) for x in input]
+    r = [np.empty_like(x) for x in input]
+    _algo.wilder_smooth(r, input, periods)
+    return r
+  else:
+    input = _to_f64(input)
+    r = np.empty_like(input)
+    _algo.wilder_smooth(r, input, periods)
+    return r
+
 def ZSCORE(
   input: np.ndarray | list[np.ndarray], periods: int
 ) -> np.ndarray | list[np.ndarray]:
@@ -1010,5 +1149,30 @@ def ZSCORE(
     input = _to_f64(input)
     r = np.empty_like(input)
     _algo.zscore(r, input, periods)
+    return r
+
+def ZSCORE_POP(
+  input: np.ndarray | list[np.ndarray], periods: int
+) -> np.ndarray | list[np.ndarray]:
+  """
+  Rolling Z-Score using Population StdDev (ddof=0) over a moving window
+  
+  Z-Score = (x - mean) / σ, where σ is the Population Standard Deviation (ddof=0).
+  
+  This differs from `ta_zscore` which uses Sample StdDev (ddof=1).
+  Population StdDev is the industry standard for financial technical analysis
+  (TA-Lib, TradingView, Bloomberg).
+  
+  Ref: https://en.wikipedia.org/wiki/Standard_score
+  """
+  if isinstance(input, list):
+    input = [_to_f64(x) for x in input]
+    r = [np.empty_like(x) for x in input]
+    _algo.zscore_pop(r, input, periods)
+    return r
+  else:
+    input = _to_f64(input)
+    r = np.empty_like(input)
+    _algo.zscore_pop(r, input, periods)
     return r
 
