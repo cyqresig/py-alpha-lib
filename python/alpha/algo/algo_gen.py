@@ -837,6 +837,33 @@ def REGRESI(
     _algo.regresi(r, y, x, periods)
     return r
 
+def RESI(
+  input: np.ndarray | list[np.ndarray], periods: int
+) -> np.ndarray | list[np.ndarray]:
+  """
+  Time-Series Linear Regression Residual (single-series)
+  
+  Calculates the residual of the **last** observation in each rolling window
+  for an OLS regression of `y` against the implicit time index `x = [0, 1, ..., w-1]`.
+  
+  ε = y_last − ŷ_last = (y_last − ȳ) − β·(x_last − x̄)
+  
+  where `x_last = w - 1`, `β = (n·Σxy − Σx·Σy) / (n·Σx² − (Σx)²)`.
+  
+  This requires access to the raw `y_last` value, so it is implemented
+  separately rather than through the closure-based `time_reg_core`.
+  """
+  if isinstance(input, list):
+    input = [_to_f64(x) for x in input]
+    r = [np.empty_like(x) for x in input]
+    _algo.resi(r, input, periods)
+    return r
+  else:
+    input = _to_f64(input)
+    r = np.empty_like(input)
+    _algo.resi(r, input, periods)
+    return r
+
 def RLONGCROSS(
   a: np.ndarray | list[np.ndarray], b: np.ndarray | list[np.ndarray], n: int
 ) -> np.ndarray | list[np.ndarray]:
@@ -854,6 +881,30 @@ def RLONGCROSS(
     b = _to_f64(b)
     r = np.empty_like(a, dtype=bool)
     _algo.rlongcross(r, a, b, n)
+    return r
+
+def RSQR(
+  input: np.ndarray | list[np.ndarray], periods: int
+) -> np.ndarray | list[np.ndarray]:
+  """
+  Time-Series Linear Regression R-Squared (Coefficient of Determination)
+  
+  Calculates R² for a rolling OLS regression of `y` against the implicit
+  time index `x = [0, 1, ..., w-1]`.
+  
+  R² = (n·Σxy − Σx·Σy)² / ((n·Σx² − (Σx)²) · (n·Σy² − (Σy)²))
+  
+  This is a single-series variant that avoids allocating an explicit `x` array.
+  """
+  if isinstance(input, list):
+    input = [_to_f64(x) for x in input]
+    r = [np.empty_like(x) for x in input]
+    _algo.rsqr(r, input, periods)
+    return r
+  else:
+    input = _to_f64(input)
+    r = np.empty_like(input)
+    _algo.rsqr(r, input, periods)
     return r
 
 def SCAN_ADD(

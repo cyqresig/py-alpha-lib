@@ -98,3 +98,7 @@ pub use ext_ema::*;
 // P3: Mean Absolute Deviation
 mod ext_mad;
 pub use ext_mad::*;
+
+// P4: Time-series regression R² and Residual (single-series)
+mod ext_reg_time;
+pub use ext_reg_time::*;
